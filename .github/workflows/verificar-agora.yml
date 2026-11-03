@@ -1,0 +1,19 @@
+name: Verificar agora
+# Libera a versão enviada pelo ATUALIZADOR DPFIN-Neves: os DPFin instalados a encontram na sua verificação.
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  liberar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Liberar a versão mais nova
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag=$(gh release list --limit 50 --json tagName,isPrerelease,createdAt \
+                --jq '[.[] | select(.isPrerelease)] | sort_by(.createdAt) | last | .tagName // ""')
+          if [ -z "$tag" ]; then echo "Nenhuma versão aguardando liberação."; exit 0; fi
+          gh release edit "$tag" --prerelease=false --latest
+          echo "Versão $tag liberada."
